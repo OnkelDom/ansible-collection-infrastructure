@@ -1,0 +1,92 @@
+---
+- name: Verify live journal persistence on dedicated logging test VMs
+  hosts: logging_test_vms
+  become: true
+  gather_facts: true
+  vars:
+    logging_manage_logrotate_global: true
+  pre_tasks:
+  - name: Require explicit runtime test permission
+    ansible.builtin.assert:
+      that:
+      - logging_runtime_test | default(false) | bool
+      - ansible_facts.virtualization_role == 'guest'
+      - ansible_facts.virtualization_type not in ['docker', 'container', 'lxc', 'podman']
+      fail_msg: Run only on dedicated test VMs with logging_runtime_test=true.
+  roles:
+  - degitag.infrastructure.logging
+  tasks:
+  - name: Apply notified journal policy before verification
+    ansible.builtin.meta: flush_handlers
+  - name: Inspect live journal service
+    ansible.builtin.service_facts: {}
+  - name: Verify journal is running
+    ansible.builtin.assert:
+      that:
+      - ansible_facts.services['systemd-journald.service'].state == 'running'
+  - name: Show composed journald configuration for operator review
+    ansible.builtin.command:
+      argv:
+      - systemd-analyze
+      - cat-config
+      - systemd/journald.conf
+    changed_when: false
+  - name: Write a journal persistence probe
+    ansible.builtin.command:
+      argv:
+      - systemd-cat
+      - --identifier=degitag-logging-validation
+      - /bin/echo
+      - degitag-logging-persistence-probe
+    changed_when: false
+  - name: Flush and synchronize journal files
+    ansible.builtin.command:
+      argv:
+      - journalctl
+      - '{{ item }}'
+    loop:
+    - --flush
+    - --sync
+    changed_when: false
+  - name: Read the probe from the persistent journal directory
+    ansible.builtin.command:
+      argv:
+      - journalctl
+      - --directory=/var/log/journal
+      - --identifier=degitag-logging-validation
+      - --lines=1
+      - --output=cat
+      - --no-pager
+    changed_when: false
+    register: _logging_probe
+  - name: Verify persistent journal contents
+    ansible.builtin.assert:
+      that:
+      - _logging_probe.stdout == 'degitag-logging-persistence-probe'
+  - name: Check journal configuration diagnostics from this boot
+    ansible.builtin.command:
+      argv:
+      - journalctl
+      - --boot
+      - --unit=systemd-journald.service
+      - --priority=warning
+      - --no-pager
+      - --output=cat
+    changed_when: false
+    register: _logging_diagnostics
+  - name: Reject journal parser errors
+    ansible.builtin.assert:
+      that:
+      - _logging_diagnostics.stdout is not search('(?i)(unknown (key|lvalue)|failed to parse|invalid.*(size|time|storage))')
+  - name: Verify EL9 SELinux enforcement
+    ansible.builtin.command:
+      argv:
+      - getenforce
+    changed_when: false
+    register: _logging_selinux
+    when: ansible_facts.os_family == 'RedHat'
+  - name: Assert EL9 stayed enforcing
+    ansible.builtin.assert:
+      that:
+      - _logging_selinux.stdout == 'Enforcing'
+    when: ansible_facts.os_family == 'RedHat'

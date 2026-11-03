@@ -1,0 +1,21 @@
+---
+- name: Refresh journal service state at handler execution
+  ansible.builtin.service_facts: {}
+  become: true
+- name: Restart an already running journal
+  ansible.builtin.systemd_service:
+    name: '{{ logging_journald_service_name }}'
+    state: restarted
+  become: true
+  register: _logging_journal_restart
+  when: ansible_facts.services.get(logging_journald_service_name ~ '.service', {}).get('state', '') == 'running'
+- name: Flush persistent storage after the journal restart
+  ansible.builtin.command:
+    argv:
+    - '{{ logging_journald_journalctl }}'
+    - --flush
+  become: true
+  changed_when: true
+  when:
+  - _logging_journal_restart is changed
+  - logging_journald_storage == 'persistent'

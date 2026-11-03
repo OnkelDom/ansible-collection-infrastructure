@@ -1,0 +1,20 @@
+# Ansible managed: degitag.infrastructure.logrotate
+{{ logrotate_global_frequency }}
+rotate {{ logrotate_global_rotate }}
+{% if logrotate_global_create | bool %}
+create
+{% else %}
+nocreate
+{% endif %}
+{% if logrotate_global_dateext | bool %}
+dateext
+{% else %}
+nodateext
+{% endif %}
+{% if logrotate_global_compress | bool %}
+compress
+{% else %}
+nocompress
+{% endif %}
+su {{ logrotate_global_su_user }} {{ logrotate_global_su_group }}
+include {{ logrotate_config_dir }}

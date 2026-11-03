@@ -1,0 +1,7 @@
+---
+- name: Syntax test for logging
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  roles:
+  - role: degitag.infrastructure.logging

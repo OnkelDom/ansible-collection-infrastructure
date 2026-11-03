@@ -42,3 +42,13 @@ logrotate_rule_defaults:
   extra_directives: []
 
 logrotate_rules: []
+
+logrotate_manage_global_config: false
+logrotate_global_config_file: /etc/logrotate.conf
+logrotate_global_frequency: daily
+logrotate_global_rotate: 7
+logrotate_global_create: true
+logrotate_global_dateext: true
+logrotate_global_compress: true
+logrotate_global_su_user: root
+logrotate_global_su_group: root

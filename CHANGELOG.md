@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0 - 2026-11-03
+
+- Add `logging` for configurable journald limits and optional delegation of global logrotate policy.
+- Add opt-in, staged and backed-up main configuration management to `logrotate`; existing rule-only usage stays unchanged.
+- Add container configuration checks and guarded dedicated-VM persistence checks.
+
 ## 2.1.0 - 2026-10-29
 
 - Add `kernel_crash_recovery` with persistent panic-on-Oops, a configurable reboot delay, live drift correction and explicit rollback.

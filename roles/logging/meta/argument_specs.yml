@@ -1,0 +1,93 @@
+---
+argument_specs:
+  main:
+    short_description: Entry point for the logging role.
+    description:
+    - Validate variables for the `logging` role.
+    options:
+      logging_manage_journald:
+        description:
+        - Manage the dedicated journald policy fragment.
+        required: false
+        type: bool
+      logging_journald_storage:
+        description:
+        - Select journal storage mode.
+        required: false
+        type: str
+        choices:
+        - auto
+        - persistent
+        - volatile
+        - none
+      logging_journald_system_max_use:
+        description:
+        - Maximum persistent journal disk use, in bytes or with a K/M/G/T/P/E suffix.
+        required: false
+        type: str
+      logging_journald_system_keep_free:
+        description:
+        - Free disk-space target for persistent journal storage.
+        required: false
+        type: str
+      logging_journald_runtime_max_use:
+        description:
+        - Maximum volatile journal use under the runtime filesystem.
+        required: false
+        type: str
+      logging_journald_runtime_keep_free:
+        description:
+        - Optional runtime free-space target; empty inherits the systemd default.
+        required: false
+        type: str
+      logging_journald_system_max_file_size:
+        description:
+        - Optional maximum individual persistent journal file size; empty inherits the systemd default.
+        required: false
+        type: str
+      logging_journald_runtime_max_file_size:
+        description:
+        - Optional maximum individual runtime journal file size; empty inherits the systemd default.
+        required: false
+        type: str
+      logging_journald_max_retention_sec:
+        description:
+        - Optional maximum journal age; empty inherits systemd default.
+        required: false
+        type: str
+      logging_journald_manage_package:
+        description:
+        - Install journald packages from the distribution repositories.
+        required: false
+        type: bool
+      logging_journald_packages:
+        description:
+        - Override platform packages; empty selects the native systemd package.
+        required: false
+        type: list
+        elements: str
+      logging_journald_manage_service:
+        description:
+        - Restart and flush an already running journal after policy changes.
+        required: false
+        type: bool
+      logging_manage_logrotate:
+        description:
+        - Delegate text log rotation to degitag.infrastructure.logrotate.
+        required: false
+        type: bool
+      logging_manage_logrotate_global:
+        description:
+        - Explicitly take ownership of the global logrotate configuration with backup.
+        required: false
+        type: bool
+      logging_manage_package_cache:
+        description:
+        - Refresh APT metadata before managed package installation; disable for externally maintained caches.
+        required: false
+        type: bool
+      logging_package_cache_valid_time:
+        description:
+        - Nonnegative APT metadata validity period in seconds.
+        required: false
+        type: int

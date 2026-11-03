@@ -1,0 +1,8 @@
+---
+logging_journald_platform_packages:
+- systemd
+logging_journald_config_dir: /etc/systemd/journald.conf.d
+logging_journald_config_file: /etc/systemd/journald.conf.d/60-degitag-logging.conf
+logging_journald_legacy_file: /etc/systemd/journald.conf.d/limits.conf
+logging_journald_service_name: systemd-journald
+logging_journald_journalctl: /usr/bin/journalctl

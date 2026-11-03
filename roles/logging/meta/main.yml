@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  author: Dominik Lenhardt
+  description: Configure a portable journald and logrotate host logging baseline.
+  license: MIT
+  min_ansible_version: '2.20'
+  platforms:
+  - name: Ubuntu
+    versions:
+    - jammy
+    - noble
+    - resolute
+  - name: Debian
+    versions:
+    - trixie
+  - name: EL
+    versions:
+    - '9'
+  galaxy_tags:
+  - linux
+  - system
+  - infrastructure
+dependencies: []

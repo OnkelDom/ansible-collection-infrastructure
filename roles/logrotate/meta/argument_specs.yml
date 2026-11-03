@@ -40,3 +40,53 @@ argument_specs:
         - Controls `logrotate_rules` for the `logrotate` role.
         required: false
         type: list
+      logrotate_manage_global_config:
+        description:
+        - Explicitly take ownership of the global main file; validate before replacement and back up previous contents.
+        required: false
+        type: bool
+      logrotate_global_config_file:
+        description:
+        - Absolute destination path for the global main configuration.
+        required: false
+        type: str
+      logrotate_global_frequency:
+        description:
+        - Default rotation interval for subsequent rules; individual rules can override it.
+        required: false
+        type: str
+        choices:
+        - daily
+        - weekly
+        - monthly
+        - yearly
+      logrotate_global_rotate:
+        description:
+        - Nonnegative number of rotated archives retained by default.
+        required: false
+        type: int
+      logrotate_global_create:
+        description:
+        - Create a new log file after rotation; false emits nocreate.
+        required: false
+        type: bool
+      logrotate_global_dateext:
+        description:
+        - Use date suffixes for archives; false emits nodateext.
+        required: false
+        type: bool
+      logrotate_global_compress:
+        description:
+        - Compress archives by default; false emits nocompress.
+        required: false
+        type: bool
+      logrotate_global_su_user:
+        description:
+        - User context for global rotation; root by default. Must exist on the target.
+        required: false
+        type: str
+      logrotate_global_su_group:
+        description:
+        - Group context for global rotation; root by default, including group-writable Ubuntu log directories.
+        required: false
+        type: str

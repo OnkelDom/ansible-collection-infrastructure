@@ -1,0 +1,72 @@
+---
+- name: Read the installed main policy checksum
+  ansible.builtin.stat:
+    path: /etc/logrotate.conf
+    checksum_algorithm: sha256
+  register: _logging_valid_main
+- name: Create disposable invalid include directory
+  ansible.builtin.file:
+    path: /tmp/degitag-logging-invalid
+    state: directory
+    mode: '0755'
+  changed_when: false
+- name: Write invalid include fixture
+  ansible.builtin.copy:
+    dest: /tmp/degitag-logging-invalid/broken
+    content: "definitely_invalid_global_directive\n"
+    mode: '0644'
+  changed_when: false
+- name: Reject invalid included rules before replacing main
+  block:
+  - name: Apply logrotate policy
+    ansible.builtin.include_role:
+      name: degitag.infrastructure.logrotate
+    vars:
+      logrotate_manage_global_config: true
+      logrotate_config_dir: /tmp/degitag-logging-invalid
+  - name: Fail if invalid policy was accepted
+    ansible.builtin.fail:
+      msg: INVALID_POLICY_ACCEPTED
+  rescue:
+  - name: Check expected rejection
+    ansible.builtin.assert:
+      that:
+      - "'failed to validate' in (ansible_failed_result | to_json)"
+- name: Read main policy after failed validation
+  ansible.builtin.stat:
+    path: /etc/logrotate.conf
+    checksum_algorithm: sha256
+  register: _logging_failed_main
+- name: Assert failed validation preserved the main file
+  ansible.builtin.assert:
+    that:
+    - _logging_valid_main.stat.checksum == _logging_failed_main.stat.checksum
+- name: Create legacy quickfix fixture
+  ansible.builtin.copy:
+    dest: /etc/systemd/journald.conf.d/limits.conf
+    content: "[Journal]\nSystemMaxUse=1G\n"
+    mode: '0644'
+  changed_when: false
+- name: Reject competing quickfix
+  block:
+  - name: Apply logging policy
+    ansible.builtin.include_role:
+      name: degitag.infrastructure.logging
+    vars:
+      logging_manage_logrotate: false
+  - name: Fail if invalid policy was accepted
+    ansible.builtin.fail:
+      msg: INVALID_POLICY_ACCEPTED
+  rescue:
+  - name: Check expected rejection
+    ansible.builtin.assert:
+      that:
+      - "'Existing limits.conf' in (ansible_failed_result | to_json)"
+- name: Remove only disposable test fixtures
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: absent
+  loop:
+  - /tmp/degitag-logging-invalid
+  - /etc/systemd/journald.conf.d/limits.conf
+  changed_when: false

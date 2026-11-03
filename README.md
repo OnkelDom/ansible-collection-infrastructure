@@ -103,6 +103,7 @@ Secrets stammen aus Ansible Vault oder dem Betreiber-Secret-Store. Beispiele ver
 | [`haproxy`](roles/haproxy/README.md) | Install and configure HAProxy load balancers and TLS assets. |
 | [`hosts`](roles/hosts/README.md) | Manage hostname-related entries in /etc/hosts. |
 | [`keepalived`](roles/keepalived/README.md) | Install and configure Keepalived VRRP instances and helper scripts. |
+| [`logging`](roles/logging/README.md) | Configure a portable journald and logrotate host logging baseline. |
 | [`logrotate`](roles/logrotate/README.md) | Manage custom logrotate rules for application and service logs. |
 | [`lvm`](roles/lvm/README.md) | Create and manage LVM volume groups and logical volumes. |
 | [`motd`](roles/motd/README.md) | Configure the login message of the day. |

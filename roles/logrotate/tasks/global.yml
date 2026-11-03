@@ -1,0 +1,30 @@
+---
+- name: Inspect the native logrotate scheduler
+  ansible.builtin.stat:
+    path: '{{ item }}'
+  loop: '{{ logrotate_scheduler_paths }}'
+  register: _logrotate_schedulers
+- name: Require a native logrotate scheduler
+  ansible.builtin.assert:
+    that:
+    - _logrotate_schedulers.results | selectattr('stat.exists') | list | length > 0
+    fail_msg: No native logrotate timer or cron entry found. Supply a distribution scheduler before managing global policy.
+- name: Inspect the logrotate include directory
+  ansible.builtin.stat:
+    path: '{{ logrotate_config_dir }}'
+  register: _logrotate_include_dir
+- name: Require the logrotate include directory
+  ansible.builtin.assert:
+    that:
+    - _logrotate_include_dir.stat.isdir | default(false)
+    fail_msg: The logrotate include directory must exist before validating global policy.
+- name: Deploy validated global logrotate policy
+  ansible.builtin.template:
+    src: global.conf.j2
+    dest: '{{ logrotate_global_config_file }}'
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+    validate: '{{ logrotate_validate_command }}'
+  become: true
