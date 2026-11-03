@@ -62,3 +62,7 @@ Ergebniszusammenfassungen ohne Zugangsdaten liegen in [results.json](results.jso
 ## Paketbedingte Ausnahme
 
 Die Host-Rolle `dante` unterstuetzt Ubuntu und Rocky/RHEL 9, nicht Debian 13. Der echte Debian-13-Test hat die fehlenden Stable-Pakete nachgewiesen; der Preflight lehnt dieses Ziel vor Aenderungen ab. [Debian-Paketsuche](https://packages.debian.org/search?keywords=dante-server) und [Debian-Projektdiskussion](https://lists.debian.org/debian-project/2025/09/msg00000.html). Die CI-Funktionsmatrix umfasst daher vier Dante- und fuenf WPAD-Ziele.
+
+## Logging-Baseline
+
+[Validierung vom 3. November 2026](logging-20261103.md): neue Logging-Rolle, globale Logrotate-Policy, Container-Matrix und dedizierte VM-Laufzeitpruefungen inklusive Dienstschutz und SELinux.

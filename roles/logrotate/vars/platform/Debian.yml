@@ -2,3 +2,7 @@
 logrotate_package_name: logrotate
 logrotate_binary: /usr/sbin/logrotate
 logrotate_validate_command: "{{ logrotate_binary }} -d -s /dev/null %s"
+logrotate_scheduler_paths:
+- /usr/lib/systemd/system/logrotate.timer
+- /lib/systemd/system/logrotate.timer
+- /etc/cron.daily/logrotate

@@ -1,0 +1,163 @@
+---
+- name: Verify portable logging configuration without systemd activation
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    logging_journald_manage_service: false
+    logging_journald_system_max_use: 512M
+    logging_journald_runtime_keep_free: 64M
+    logging_journald_max_retention_sec: 7d
+    logrotate_global_rotate: 14
+  tasks:
+  - name: Reject malformed journal size
+    block:
+    - name: Apply logging policy
+      ansible.builtin.include_role:
+        name: degitag.infrastructure.logging
+      vars:
+        logging_journald_system_max_use: "256M\nStorage=none"
+    - name: Fail if invalid policy was accepted
+      ansible.builtin.fail:
+        msg: INVALID_POLICY_ACCEPTED
+    rescue:
+    - name: Check expected rejection
+      ansible.builtin.assert:
+        that:
+        - "'Invalid journald size' in (ansible_failed_result | to_json)"
+  - name: Reject malformed journal retention
+    block:
+    - name: Apply logging policy
+      ansible.builtin.include_role:
+        name: degitag.infrastructure.logging
+      vars:
+        logging_journald_max_retention_sec: one week
+    - name: Fail if invalid policy was accepted
+      ansible.builtin.fail:
+        msg: INVALID_POLICY_ACCEPTED
+    rescue:
+    - name: Check expected rejection
+      ansible.builtin.assert:
+        that:
+        - "'Invalid journald retention' in (ansible_failed_result | to_json)"
+  - name: Reject inconsistent delegation
+    block:
+    - name: Apply logging policy
+      ansible.builtin.include_role:
+        name: degitag.infrastructure.logging
+      vars:
+        logging_manage_logrotate: false
+        logging_manage_logrotate_global: true
+    - name: Fail if invalid policy was accepted
+      ansible.builtin.fail:
+        msg: INVALID_POLICY_ACCEPTED
+    rescue:
+    - name: Check expected rejection
+      ansible.builtin.assert:
+        that:
+        - "'Invalid logging policy' in (ansible_failed_result | to_json)"
+  - name: Read global config before opt-out invocation
+    ansible.builtin.stat:
+      path: /etc/logrotate.conf
+      checksum_algorithm: sha256
+    register: _logging_main_before
+  - name: Apply logging policy
+    ansible.builtin.include_role:
+      name: degitag.infrastructure.logging
+    vars:
+      logging_manage_logrotate_global: false
+  - name: Read global config after opt-out invocation
+    ansible.builtin.stat:
+      path: /etc/logrotate.conf
+      checksum_algorithm: sha256
+    register: _logging_main_after
+  - name: Verify global opt-out preserves the main file
+    ansible.builtin.assert:
+      that:
+      - _logging_main_before.stat.checksum | default('absent') == _logging_main_after.stat.checksum | default('absent')
+  - name: Reject malformed rotation identity
+    block:
+    - name: Apply invalid rotation identity
+      ansible.builtin.include_role:
+        name: degitag.infrastructure.logrotate
+      vars:
+        logrotate_manage_global_config: true
+        logrotate_global_su_user: "root\ninclude /tmp/foreign"
+    - name: Fail if malformed identity was accepted
+      ansible.builtin.fail:
+        msg: INVALID_POLICY_ACCEPTED
+    rescue:
+    - name: Check identity validation rejected the input
+      ansible.builtin.assert:
+        that:
+        - "'Invalid global logrotate policy' in (ansible_failed_result | to_json)"
+  - name: Reject negative rotation count
+    block:
+    - name: Apply logrotate policy
+      ansible.builtin.include_role:
+        name: degitag.infrastructure.logrotate
+      vars:
+        logrotate_manage_global_config: true
+        logrotate_global_rotate: -1
+    - name: Fail if invalid policy was accepted
+      ansible.builtin.fail:
+        msg: INVALID_POLICY_ACCEPTED
+    rescue:
+    - name: Check expected rejection
+      ansible.builtin.assert:
+        that:
+        - "'Invalid global logrotate policy' in (ansible_failed_result | to_json)"
+  - name: Apply logging policy
+    ansible.builtin.include_role:
+      name: degitag.infrastructure.logging
+    vars:
+      logging_manage_logrotate_global: true
+  - name: Flush configuration-only handlers
+    ansible.builtin.meta: flush_handlers
+  - name: Read managed journal fragment
+    ansible.builtin.slurp:
+      src: /etc/systemd/journald.conf.d/60-degitag-logging.conf
+    register: _logging_fragment
+  - name: Inspect managed journal permissions
+    ansible.builtin.stat:
+      path: /etc/systemd/journald.conf.d/60-degitag-logging.conf
+    register: _logging_fragment_stat
+  - name: Read global policy
+    ansible.builtin.slurp:
+      src: /etc/logrotate.conf
+    register: _logging_global
+  - name: Validate complete logrotate policy
+    ansible.builtin.command:
+      argv:
+      - /usr/sbin/logrotate
+      - -d
+      - -s
+      - /dev/null
+      - /etc/logrotate.conf
+    changed_when: false
+  - name: Assert rendered overrides and ownership
+    ansible.builtin.assert:
+      that:
+      - "'SystemMaxUse=512M' in (_logging_fragment.content | b64decode)"
+      - "'RuntimeKeepFree=64M' in (_logging_fragment.content | b64decode)"
+      - "'MaxRetentionSec=7d' in (_logging_fragment.content | b64decode)"
+      - "'RuntimeMaxFileSize=' not in (_logging_fragment.content | b64decode)"
+      - _logging_fragment_stat.stat.mode == '0644'
+      - _logging_fragment_stat.stat.uid == 0
+      - "'rotate 14' in (_logging_global.content | b64decode)"
+      - (_logging_global.content | b64decode).index('compress') < (_logging_global.content | b64decode).index('include')
+      - "'su root root' in (_logging_global.content | b64decode)"
+  - name: Verify unchanged check mode after convergence
+    ansible.builtin.include_role:
+      name: degitag.infrastructure.logging
+      apply:
+        check_mode: true
+    vars:
+      logging_manage_logrotate_global: true
+  - name: Verify staged validation and legacy migration failures
+    ansible.builtin.include_tasks: failure_cases.yml
+  pre_tasks:
+  - name: Install native logrotate before preservation tests
+    ansible.builtin.package:
+      name: logrotate
+      state: present

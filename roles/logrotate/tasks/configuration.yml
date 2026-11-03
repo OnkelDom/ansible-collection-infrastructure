@@ -1,4 +1,17 @@
 ---
+- name: Validate global logrotate policy
+  ansible.builtin.assert:
+    that:
+    - logrotate_package_state != 'absent'
+    - logrotate_global_config_file.startswith('/')
+    - logrotate_global_frequency in ['daily', 'weekly', 'monthly', 'yearly']
+    - logrotate_global_rotate | int >= 0
+    - logrotate_config_dir is match('^/[a-zA-Z0-9_./-]+$')
+    - logrotate_global_su_user is match('^[A-Za-z0-9_.-]+[$]?$')
+    - logrotate_global_su_group is match('^[A-Za-z0-9_.-]+[$]?$')
+    fail_msg: Invalid global logrotate policy.
+  when: logrotate_manage_global_config | bool
+
 - name: Validate supported platform
   ansible.builtin.assert:
     that:
@@ -66,6 +79,10 @@
   become: true
   when: logrotate_manage_package | bool
   tags: logrotate
+
+- name: Configure global logrotate policy
+  ansible.builtin.import_tasks: global.yml
+  when: logrotate_manage_global_config | bool
 
 - name: Ensure logrotate configuration directory exists
   ansible.builtin.file:

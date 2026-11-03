@@ -1,0 +1,89 @@
+---
+- name: Validate logging policy
+  ansible.builtin.assert:
+    that:
+    - (not (logging_manage_logrotate_global | bool)) or (logging_manage_logrotate | bool)
+    - logging_journald_storage in ['auto', 'persistent', 'volatile', 'none']
+    - logging_package_cache_valid_time >= 0
+    fail_msg: Invalid logging policy or global logrotate enabled without logrotate management.
+- name: Validate journald size values
+  ansible.builtin.assert:
+    that:
+    - item.value is string
+    - item.value is match(logging_journald_size_pattern) or (item.optional and item.value == '')
+    fail_msg: Invalid journald size; use bytes or an integer with K, M, G, T, P or E suffix.
+  loop:
+  - value: '{{ logging_journald_system_max_use }}'
+    optional: false
+  - value: '{{ logging_journald_system_keep_free }}'
+    optional: false
+  - value: '{{ logging_journald_runtime_max_use }}'
+    optional: false
+  - value: '{{ logging_journald_runtime_keep_free }}'
+    optional: true
+  - value: '{{ logging_journald_system_max_file_size }}'
+    optional: true
+  - value: '{{ logging_journald_runtime_max_file_size }}'
+    optional: true
+  when: logging_manage_journald | bool
+- name: Validate journald retention
+  ansible.builtin.assert:
+    that:
+    - logging_journald_max_retention_sec == '' or logging_journald_max_retention_sec is match(logging_journald_retention_pattern)
+    fail_msg: Invalid journald retention; use a duration such as 7d, 2w or 1h 30min.
+  when: logging_manage_journald | bool
+- name: Inspect legacy quickfix configuration
+  ansible.builtin.stat:
+    path: '{{ logging_journald_legacy_file }}'
+  register: _logging_legacy
+  when: logging_manage_journald | bool
+- name: Reject competing legacy quickfix configuration
+  ansible.builtin.assert:
+    that:
+    - not _logging_legacy.stat.exists
+    fail_msg: Existing limits.conf requires explicit migration. Inspect it with vim, merge its policy into inventory and remove it explicitly before applying logging. No foreign file is deleted.
+  when: logging_manage_journald | bool
+- name: Collect missing service manager fact
+  ansible.builtin.setup:
+    gather_subset:
+    - '!all'
+    - '!min'
+    - service_mgr
+  when:
+  - logging_manage_journald | bool
+  - logging_journald_manage_service | bool
+  - "'service_mgr' not in ansible_facts"
+- name: Require systemd for live journal management
+  ansible.builtin.assert:
+    that:
+    - ansible_facts.service_mgr == 'systemd'
+    fail_msg: Live journald management requires systemd; set logging_journald_manage_service=false for configuration-only tests.
+  when:
+  - logging_manage_journald | bool
+  - logging_journald_manage_service | bool
+- name: Refresh native APT metadata when package installation is managed
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: '{{ logging_package_cache_valid_time }}'
+  become: true
+  changed_when: false
+  when:
+  - logging_manage_package_cache | bool
+  - ansible_facts.os_family == 'Debian'
+  - ((logging_manage_journald | bool) and (logging_journald_manage_package | bool)) or ((logging_manage_logrotate | bool) and (logrotate_manage_package | default(true) | bool))
+- name: Configure logrotate through its owning role
+  ansible.builtin.include_role:
+    name: degitag.infrastructure.logrotate
+    apply:
+      tags:
+      - logging
+  vars:
+    logrotate_manage_global_config: '{{ logging_manage_logrotate_global }}'
+  when: logging_manage_logrotate | bool
+- name: Configure journald
+  ansible.builtin.include_tasks:
+    file: journald.yml
+    apply:
+      tags:
+      - logging
+  when: logging_manage_journald | bool

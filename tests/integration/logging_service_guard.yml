@@ -1,0 +1,80 @@
+---
+- name: Verify logging service guards on dedicated test VMs
+  hosts: logging_test_vms
+  become: true
+  gather_facts: true
+  pre_tasks:
+  - name: Require dedicated VM guard permission
+    ansible.builtin.assert:
+      that:
+      - logging_runtime_test | default(false) | bool
+      - ansible_facts.virtualization_role == 'guest'
+      - ansible_facts.virtualization_type not in ['docker','lxc','container','podman']
+      fail_msg: Run only on dedicated disposable logging VMs.
+  tasks:
+  - name: Read journal process identity
+    ansible.builtin.command:
+      argv:
+      - systemctl
+      - show
+      - systemd-journald.service
+      - --property=MainPID
+      - --value
+    changed_when: false
+    register: _logging_pid_before
+  - name: Render journal service guard policy
+    ansible.builtin.include_role:
+      name: degitag.infrastructure.logging
+    vars:
+      logging_journald_manage_service: false
+      logging_journald_system_max_use: 768M
+  - name: Flush disabled service handlers
+    ansible.builtin.meta: flush_handlers
+  - name: Read journal process identity
+    ansible.builtin.command:
+      argv:
+      - systemctl
+      - show
+      - systemd-journald.service
+      - --property=MainPID
+      - --value
+    changed_when: false
+    register: _logging_pid_after
+  - name: Assert configuration-only mode preserved the process
+    ansible.builtin.assert:
+      that:
+      - _logging_pid_before.stdout == _logging_pid_after.stdout
+      - _logging_pid_before.stdout | int > 0
+  - name: Verify a service stopped after rendering stays stopped
+    block:
+    - name: Render journal service guard policy
+      ansible.builtin.include_role:
+        name: degitag.infrastructure.logging
+      vars:
+        logging_journald_system_max_use: 256M
+    - name: Temporarily mask and stop the disposable journal
+      ansible.builtin.systemd_service:
+        name: systemd-journald.service
+        masked: true
+        state: stopped
+    - name: Execute pending handler against the stopped journal
+      ansible.builtin.meta: flush_handlers
+    - name: Read stopped journal state
+      ansible.builtin.command:
+        argv:
+        - systemctl
+        - is-active
+        - systemd-journald.service
+      changed_when: false
+      failed_when: false
+      register: _logging_stopped
+    - name: Assert pending configuration did not start journald
+      ansible.builtin.assert:
+        that:
+        - _logging_stopped.stdout in ['inactive','failed']
+    always:
+    - name: Restore the disposable journal after guard testing
+      ansible.builtin.systemd_service:
+        name: systemd-journald.service
+        masked: false
+        state: started

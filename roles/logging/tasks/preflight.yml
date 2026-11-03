@@ -1,0 +1,25 @@
+---
+- name: Collect missing platform facts
+  ansible.builtin.setup: {}
+  when: "['architecture', 'distribution', 'distribution_major_version', 'distribution_version', 'os_family', 'service_mgr'] | difference(ansible_facts.keys()) | length > 0"
+- name: Validate the supported operating system release
+  ansible.builtin.assert:
+    that:
+    - (ansible_facts['distribution'] == 'Debian' and ansible_facts['distribution_major_version'] == '13') or (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_version'] in ['22.04', '24.04', '26.04']) or (ansible_facts['distribution'] in ['Rocky', 'RedHat'] and ansible_facts['distribution_major_version'] == '9')
+    fail_msg: Unsupported operating system for logging. See the role README for supported releases.
+    quiet: true
+- name: Load family platform variables
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/platform/{{ ansible_facts['os_family'] }}.yml"
+- name: Load distribution platform variables
+  ansible.builtin.include_vars:
+    file: "{{ role_path }}/vars/platform/{{ ansible_facts['distribution'] }}.yml"
+  when: ansible_facts['distribution'] != ansible_facts['os_family']
+- name: Load release platform variables
+  ansible.builtin.include_vars: '{{ item }}'
+  with_first_found:
+  - files:
+    - "{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_version'] }}.yml"
+    - "{{ ansible_facts['distribution'] }}-{{ ansible_facts['distribution_major_version'] }}.yml"
+    paths:
+    - '{{ role_path }}/vars/platform'

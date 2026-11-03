@@ -15,7 +15,44 @@ Facts are collected at entry only when the required platform facts are missing.
 family, distribution and release variables from `vars/platform/` in that order.
 Public inputs belong in `defaults/main.yml`; platform internals belong in `vars/`.
 
-Run this role only on hosts assigned to its responsibility. Review the defaults and required inputs before rollout.
+### Global policy adoption
+
+Custom rules retain their existing API. `logrotate_manage_global_config=false`
+preserves the distribution main file. Explicit true takes ownership of
+`logrotate_global_config_file` (default `/etc/logrotate.conf`) and replaces its
+contents with backup enabled. Review and migrate required top-level rules to
+`logrotate_rules` or operator-owned include files before adoption. Package fragments
+in the include directory are preserved.
+
+Global defaults are daily rotation, seven archives, file creation, date suffixes
+and compression. They precede the include directory; individual rules can override
+them. Disabling any boolean emits its inverse directive explicitly.
+The global `su` context defaults to `root root` and is configurable through
+`logrotate_global_su_user` and `logrotate_global_su_group`. This explicit context
+also supports group-writable Ubuntu log directories without assuming that a
+syslog group exists on minimal installations. Both identities must exist on the
+target; native validation rejects unknown accounts before replacing the main file.
+
+### Validation and scheduling
+
+The native `logrotate -d -s /dev/null` validates the staged main file, including
+installed fragments, before replacement. It rotates no files and writes no state.
+A validation error leaves the old main file intact. The include path must be absolute
+and contain only letters, digits, underscores, dots, slashes or hyphens.
+
+A distribution timer or cron entry must exist. The role neither creates a second
+scheduler nor enables an inactive scheduler. Verify actual scheduling with
+`systemctl list-timers` and the native cron service on the target host. On a fresh
+host, check mode cannot validate using a not-yet-installed binary; install the
+package first.
+
+### Rollback
+
+Disable global management and restore the explicitly selected Ansible backup through
+a controlled copy; use `vim` to inspect differences first. Disabling management alone
+leaves the current file in place. Global ownership never authorizes removal of
+unrelated package rules.
+
 
 ## Role Variables
 
@@ -64,6 +101,15 @@ logrotate_rule_defaults:
   lastaction: ''
   extra_directives: []
 logrotate_rules: []
+logrotate_manage_global_config: false
+logrotate_global_config_file: /etc/logrotate.conf
+logrotate_global_frequency: daily
+logrotate_global_rotate: 7
+logrotate_global_create: true
+logrotate_global_dateext: true
+logrotate_global_compress: true
+logrotate_global_su_user: root
+logrotate_global_su_group: root
 ```
 
 ## Example Playbook

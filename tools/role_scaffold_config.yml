@@ -69,6 +69,7 @@ role_descriptions:
   conditional_reboot: Schedule requirement-based reboots within an explicit maintenance window.
   prompt: Configure an interactive Bash prompt and optional operator helpers.
   kernel_crash_recovery: Configure persistent automatic reboot after a kernel panic or Oops.
+  logging: Configure a portable journald and logrotate host logging baseline.
 role_galaxy_tags:
   apt_repos:
   - apt
@@ -104,6 +105,7 @@ role_example_playbooks:
   conditional_reboot: "- name: Configure maintenance reboot policy\n  hosts: maintenance_hosts\n  become: true\n  gather_facts: true\n  roles:\n    - role: degitag.infrastructure.conditional_reboot\n      vars:\n        conditional_reboot_enabled: true\n        conditional_reboot_time:\n          hour: 4\n          minute: 0\n"
   prompt: "- name: Configure operator prompt\n  hosts: linux_hosts\n  become: true\n  gather_facts: true\n  roles:\n    - role: degitag.infrastructure.prompt\n"
   kernel_crash_recovery: "- name: Configure kernel crash recovery\n  hosts: linux_vms\n  become: true\n  gather_facts: true\n  serial: 1\n  roles:\n    - role: degitag.infrastructure.kernel_crash_recovery\n      vars:\n        kernel_crash_recovery_enabled: true\n        kernel_crash_recovery_panic_timeout: 60\n"
+  logging: "- name: Configure host logging baseline\n  hosts: linux_hosts\n  become: true\n  gather_facts: true\n  roles:\n    - role: degitag.infrastructure.logging\n      vars:\n        logging_manage_logrotate_global: true\n"
 role_platform_overrides:
   certbot:
   - *id001
@@ -163,6 +165,102 @@ role_notes:
   nginx: 'Supports TCP/UDP stream upstreams, maps and servers in addition to HTTP. Installs and loads the distribution stream module only when stream declarations are configured. Set nginx_manage_stream_module: false for an external/static module source and configure nginx_extra_conf_options as required. The complete configuration is validated with nginx -t before restart.'
   kernel_crash_recovery: "Including this role explicitly enables panic-on-Oops and a 60-second panic reboot delay. It configures recovery; it never deliberately panics or reboots a host. The platform matrix covers Debian 13, Ubuntu LTS and EL9; live acceptance must be recorded per platform. kernel_crash_recovery_panic_timeout accepts 1\u20133600 seconds. kernel_crash_recovery_apply: false writes the next-boot policy without changing the running kernel; it does not disable the persisted policy. Container tests must use this mode because containers share their host kernel. Live activation in detected containers is rejected. Apply without reboot; reconcile runtime drift even when the fragment already matches. The dedicated root-owned /etc/sysctl.d/90-kernel-crash-recovery.conf owns only kernel.panic and kernel.panic_on_oops. Do not declare these keys in another sysctl role or fragment; a later sysctl.d file or /etc/sysctl.conf may override boot values. WARN, OOM and lockup policies remain outside
     this role. Keep persistent journal/pstore evidence and unexpected-reboot alerts; kdump and watchdogs need separate coordination. Recovery can lose uncommitted writes and a recurring kernel defect can cause reboot loops. It does not repair a kernel bug or guarantee recovery from every hang. Roll out serially to the test host first, check live values and a second unchanged run, then expand by inventory limit. Do not inject a panic on a shared test server. Rollback: set kernel_crash_recovery_enabled: false and apply with kernel_crash_recovery_apply: true; both persisted and live values become zero. Configuration-only rollback takes effect on the next sysctl load or boot. Removing the role or deleting the fragment alone does not reset running values. Restore any prior custom policy explicitly. Use vim to inspect the fragment when diagnosing drift."
+  logging: |
+    ### Policy and ownership
+
+    This role owns `/etc/systemd/journald.conf.d/60-degitag-logging.conf` and delegates
+    text log rotation to `degitag.infrastructure.logrotate`. journald rotates its own
+    binary journals. rsyslog, journal upload and journal namespaces are separate responsibilities.
+    No external repositories are needed.
+
+    The defaults select persistent storage, `SystemMaxUse=256M`, `SystemKeepFree=1G`
+    and `RuntimeMaxUse=128M`. These are journal storage limits and a free-space target,
+    not filesystem quotas or a guaranteed retention period. Size inputs accept integer
+    bytes or a K/M/G/T/P/E suffix. Optional empty inputs inherit the systemd default.
+    `logging_journald_max_retention_sec` accepts durations such as `7d` or `1h 30min`.
+
+    APT metadata is refreshed before managed package installation, with a default
+    validity of 3600 seconds. Set `logging_manage_package_cache=false` when cache
+    maintenance belongs to another baseline component. `logging_package_cache_valid_time`
+    accepts a nonnegative number of seconds. Metadata refresh is excluded from
+    configuration idempotence counts, consistently with the collection package role.
+
+    ### Activation and migration
+
+    `logging_journald_manage_package` controls native package installation. An empty
+    `logging_journald_packages` list selects the platform package; a nonempty list replaces it.
+    `logging_journald_manage_service=false` renders the policy without restarting or
+    flushing journald. Live management requires systemd. Handlers restart an already
+    running service and flush persistent storage; a stopped service stays stopped.
+    The static journald unit is not enabled or disabled. No forced rotation or vacuum runs.
+
+    An existing `limits.conf` from the quickfix is rejected before configuration changes.
+    Inspect it with `vim`, migrate its settings into inventory and remove it explicitly.
+    Other operator fragments are preserved. Review `systemd-analyze cat-config
+    systemd/journald.conf` for conflicting overrides. This command displays the composed
+    configuration; it is not a syntax validator. The role validates its supported input
+    values before writing. Live parser diagnostics require VM acceptance.
+
+    `logging_manage_logrotate` controls delegation. Set
+    `logging_manage_logrotate_global=true` only after reviewing ownership of the main
+    logrotate file and any existing top-level rules. Its default is false. Configure
+    rotation values and custom text-log rules through the public `logrotate_*` inputs.
+    See the logrotate README for staged validation, backups and rollback.
+
+    Removing the role or setting a management flag to false leaves existing configuration
+    in place. To restore the underlying journald policy, explicitly remove the owned
+    fragment and restart the active journal. Old journal files are not deleted.
+
+    ### Acceptance
+
+    Use `bash tests/run_role_functional_checks.sh logging debian:13` for disposable
+    container configuration tests. They cover overrides, invalid inputs, opt-out,
+    check mode and staged validation, with service management disabled. Fixtures are
+    created and removed only in disposable test guests; their setup is excluded from
+    the role idempotence count.
+
+    Use `tests/integration/logging.yml` against the `logging_test_vms` inventory group
+    with `logging_runtime_test=true` for real journal persistence and SELinux checks.
+    Run twice and require `changed=0` on the second run. Keep platform results and
+    remaining limitations in `docs/validation/`; Rocky does not replace a real RHEL test.
+  logrotate: |
+    ### Global policy adoption
+
+    Custom rules retain their existing API. `logrotate_manage_global_config=false`
+    preserves the distribution main file. Explicit true takes ownership of
+    `logrotate_global_config_file` (default `/etc/logrotate.conf`) and replaces its
+    contents with backup enabled. Review and migrate required top-level rules to
+    `logrotate_rules` or operator-owned include files before adoption. Package fragments
+    in the include directory are preserved.
+
+    Global defaults are daily rotation, seven archives, file creation, date suffixes
+    and compression. They precede the include directory; individual rules can override
+    them. Disabling any boolean emits its inverse directive explicitly.
+    The global `su` context defaults to `root root` and is configurable through
+    `logrotate_global_su_user` and `logrotate_global_su_group`. This explicit context
+    also supports group-writable Ubuntu log directories without assuming that a
+    syslog group exists on minimal installations. Both identities must exist on the
+    target; native validation rejects unknown accounts before replacing the main file.
+
+    ### Validation and scheduling
+
+    The native `logrotate -d -s /dev/null` validates the staged main file, including
+    installed fragments, before replacement. It rotates no files and writes no state.
+    A validation error leaves the old main file intact. The include path must be absolute
+    and contain only letters, digits, underscores, dots, slashes or hyphens.
+
+    A distribution timer or cron entry must exist. The role neither creates a second
+    scheduler nor enables an inactive scheduler. Verify actual scheduling with
+    `systemctl list-timers` and the native cron service on the target host. On a fresh
+    host, check mode cannot validate using a not-yet-installed binary; install the
+    package first.
+
+    ### Rollback
+
+    Disable global management and restore the explicitly selected Ansible backup through
+    a controlled copy; use `vim` to inspect differences first. Disabling management alone
+    leaves the current file in place. Global ownership never authorizes removal of
+    unrelated package rules.
 role_argument_overrides:
   packages:
     packages_defaults_install:
@@ -556,3 +654,116 @@ role_argument_overrides:
       type: bool
       description:
       - Apply the policy to the running kernel as well as persisting it. False only renders the next-boot policy.
+  logging:
+    logging_manage_journald:
+      type: bool
+      description:
+      - Manage the dedicated journald policy fragment.
+    logging_journald_storage:
+      type: str
+      description:
+      - Select journal storage mode.
+      choices:
+      - auto
+      - persistent
+      - volatile
+      - none
+    logging_journald_system_max_use:
+      type: str
+      description:
+      - Maximum persistent journal disk use, in bytes or with a K/M/G/T/P/E suffix.
+    logging_journald_system_keep_free:
+      type: str
+      description:
+      - Free disk-space target for persistent journal storage.
+    logging_journald_runtime_max_use:
+      type: str
+      description:
+      - Maximum volatile journal use under the runtime filesystem.
+    logging_journald_runtime_keep_free:
+      type: str
+      description:
+      - Optional runtime free-space target; empty inherits the systemd default.
+    logging_journald_system_max_file_size:
+      type: str
+      description:
+      - Optional maximum individual persistent journal file size; empty inherits the systemd default.
+    logging_journald_runtime_max_file_size:
+      type: str
+      description:
+      - Optional maximum individual runtime journal file size; empty inherits the systemd default.
+    logging_journald_max_retention_sec:
+      type: str
+      description:
+      - Optional maximum journal age; empty inherits systemd default.
+    logging_journald_manage_package:
+      type: bool
+      description:
+      - Install journald packages from the distribution repositories.
+    logging_journald_packages:
+      type: list
+      description:
+      - Override platform packages; empty selects the native systemd package.
+      elements: str
+    logging_journald_manage_service:
+      type: bool
+      description:
+      - Restart and flush an already running journal after policy changes.
+    logging_manage_logrotate:
+      type: bool
+      description:
+      - Delegate text log rotation to degitag.infrastructure.logrotate.
+    logging_manage_logrotate_global:
+      type: bool
+      description:
+      - Explicitly take ownership of the global logrotate configuration with backup.
+    logging_manage_package_cache:
+      type: bool
+      description:
+      - Refresh APT metadata before managed package installation; disable for externally maintained caches.
+    logging_package_cache_valid_time:
+      type: int
+      description:
+      - Nonnegative APT metadata validity period in seconds.
+  logrotate:
+    logrotate_manage_global_config:
+      type: bool
+      description:
+      - Explicitly take ownership of the global main file; validate before replacement and back up previous contents.
+    logrotate_global_config_file:
+      type: str
+      description:
+      - Absolute destination path for the global main configuration.
+    logrotate_global_frequency:
+      type: str
+      description:
+      - Default rotation interval for subsequent rules; individual rules can override it.
+      choices:
+      - daily
+      - weekly
+      - monthly
+      - yearly
+    logrotate_global_rotate:
+      type: int
+      description:
+      - Nonnegative number of rotated archives retained by default.
+    logrotate_global_create:
+      type: bool
+      description:
+      - Create a new log file after rotation; false emits nocreate.
+    logrotate_global_dateext:
+      type: bool
+      description:
+      - Use date suffixes for archives; false emits nodateext.
+    logrotate_global_compress:
+      type: bool
+      description:
+      - Compress archives by default; false emits nocompress.
+    logrotate_global_su_user:
+      type: str
+      description:
+      - User context for global rotation; root by default. Must exist on the target.
+    logrotate_global_su_group:
+      type: str
+      description:
+      - Group context for global rotation; root by default, including group-writable Ubuntu log directories.

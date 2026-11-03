@@ -1,0 +1,3 @@
+---
+logging_journald_size_pattern: ^(0|[1-9][0-9]*)([KMGTPE])?$
+logging_journald_retention_pattern: ^([0-9]+(us|ms|s|min|h|d|w|month|y)?)([ ]+[0-9]+(us|ms|s|min|h|d|w|month|y)?)*$

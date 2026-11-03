@@ -1,0 +1,583 @@
+{
+  "date": "2026-11-03",
+  "collection": "degitag.infrastructure",
+  "version": "2.1.0",
+  "release": false,
+  "production_rollout": false,
+  "artifact_sha256": "8c2f9dc7b9081c2b158b6f7b144f3b1223b806057a9c4cca85d17afb764ee3b2",
+  "local_checks": {
+    "core_2_21": "2.21.5",
+    "core_2_20": "2.20.11",
+    "python": "3.12",
+    "unit_tests": 90,
+    "generator": true,
+    "yaml_lint": true,
+    "ansible_lint_profile": "production",
+    "all_role_syntax": true,
+    "artifact_identity_and_exclusions": true,
+    "sanity": [
+      "compile",
+      "import"
+    ],
+    "exit_codes": [
+      0,
+      0
+    ]
+  },
+  "remote_controller": {
+    "host": "dev.lenmail.de",
+    "ansible_core": "2.21.6",
+    "python": "3.13.5"
+  },
+  "containers": [
+    {
+      "image": "debian:13",
+      "test": "logging",
+      "returncode": 0,
+      "seconds": 140,
+      "recaps": [
+        "degit-test-local-7453      : ok=160  changed=4    unreachable=0    failed=0    skipped=72   rescued=7    ignored=0   ",
+        "degit-test-local-7453      : ok=160  changed=0    unreachable=0    failed=0    skipped=71   rescued=7    ignored=0   "
+      ],
+      "log": "debian-13-logging.log"
+    },
+    {
+      "image": "debian:13",
+      "test": "smoke",
+      "returncode": 0,
+      "seconds": 181,
+      "recaps": [
+        "degit-test-local-1184      : ok=149  changed=34   unreachable=0    failed=0    skipped=73   rescued=0    ignored=0   ",
+        "degit-test-local-1184      : ok=148  changed=0    unreachable=0    failed=0    skipped=70   rescued=0    ignored=0   "
+      ],
+      "log": "debian-13-smoke.log"
+    },
+    {
+      "image": "debian:13",
+      "test": "wpad",
+      "returncode": 0,
+      "seconds": 35,
+      "recaps": [
+        "degit-test-local-19773     : ok=21   changed=4    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0   ",
+        "degit-test-local-19773     : ok=20   changed=0    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0   "
+      ],
+      "log": "debian-13-wpad.log"
+    },
+    {
+      "image": "debian:13",
+      "test": "kernel",
+      "returncode": 0,
+      "seconds": 31,
+      "recaps": [
+        "degit-test-local-17426     : ok=20   changed=2    unreachable=0    failed=0    skipped=7    rescued=1    ignored=0   ",
+        "degit-test-local-17426     : ok=20   changed=0    unreachable=0    failed=0    skipped=7    rescued=1    ignored=0   "
+      ],
+      "log": "debian-13-kernel.log"
+    },
+    {
+      "image": "ubuntu:24.04",
+      "test": "logging",
+      "returncode": 0,
+      "seconds": 145,
+      "recaps": [
+        "degit-test-local-14341     : ok=173  changed=4    unreachable=0    failed=0    skipped=59   rescued=7    ignored=0   ",
+        "degit-test-local-14341     : ok=173  changed=0    unreachable=0    failed=0    skipped=58   rescued=7    ignored=0   "
+      ],
+      "log": "ubuntu-24.04-logging.log"
+    },
+    {
+      "image": "ubuntu:24.04",
+      "test": "smoke",
+      "returncode": 0,
+      "seconds": 197,
+      "recaps": [
+        "degit-test-local-26534     : ok=162  changed=34   unreachable=0    failed=0    skipped=60   rescued=0    ignored=0   ",
+        "degit-test-local-26534     : ok=161  changed=0    unreachable=0    failed=0    skipped=57   rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-24.04-smoke.log"
+    },
+    {
+      "image": "ubuntu:24.04",
+      "test": "wpad",
+      "returncode": 0,
+      "seconds": 39,
+      "recaps": [
+        "degit-test-local-6540      : ok=22   changed=4    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0   ",
+        "degit-test-local-6540      : ok=21   changed=0    unreachable=0    failed=0    skipped=9    rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-24.04-wpad.log"
+    },
+    {
+      "image": "ubuntu:24.04",
+      "test": "kernel",
+      "returncode": 0,
+      "seconds": 27,
+      "recaps": [
+        "degit-test-local-31621     : ok=22   changed=1    unreachable=0    failed=0    skipped=5    rescued=1    ignored=0   ",
+        "degit-test-local-31621     : ok=22   changed=0    unreachable=0    failed=0    skipped=5    rescued=1    ignored=0   "
+      ],
+      "log": "ubuntu-24.04-kernel.log"
+    },
+    {
+      "image": "ubuntu:24.04",
+      "test": "dante",
+      "returncode": 0,
+      "seconds": 42,
+      "recaps": [
+        "degit-test-local-4975      : ok=19   changed=5    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0   ",
+        "degit-test-local-4975      : ok=19   changed=0    unreachable=0    failed=0    skipped=5    rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-24.04-dante.log"
+    },
+    {
+      "image": "ubuntu:22.04",
+      "test": "logging",
+      "returncode": 0,
+      "seconds": 149,
+      "recaps": [
+        "degit-test-local-17410     : ok=173  changed=5    unreachable=0    failed=0    skipped=59   rescued=7    ignored=0   ",
+        "degit-test-local-17410     : ok=173  changed=0    unreachable=0    failed=0    skipped=58   rescued=7    ignored=0   "
+      ],
+      "log": "ubuntu-22.04-logging.log"
+    },
+    {
+      "image": "ubuntu:22.04",
+      "test": "smoke",
+      "returncode": 0,
+      "seconds": 197,
+      "recaps": [
+        "degit-test-local-25044     : ok=162  changed=35   unreachable=0    failed=0    skipped=60   rescued=0    ignored=0   ",
+        "degit-test-local-25044     : ok=161  changed=0    unreachable=0    failed=0    skipped=57   rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-22.04-smoke.log"
+    },
+    {
+      "image": "ubuntu:22.04",
+      "test": "wpad",
+      "returncode": 0,
+      "seconds": 42,
+      "recaps": [
+        "degit-test-local-11185     : ok=22   changed=4    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0   ",
+        "degit-test-local-11185     : ok=21   changed=0    unreachable=0    failed=0    skipped=9    rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-22.04-wpad.log"
+    },
+    {
+      "image": "ubuntu:22.04",
+      "test": "kernel",
+      "returncode": 0,
+      "seconds": 29,
+      "recaps": [
+        "degit-test-local-14146     : ok=22   changed=1    unreachable=0    failed=0    skipped=5    rescued=1    ignored=0   ",
+        "degit-test-local-14146     : ok=22   changed=0    unreachable=0    failed=0    skipped=5    rescued=1    ignored=0   "
+      ],
+      "log": "ubuntu-22.04-kernel.log"
+    },
+    {
+      "image": "ubuntu:22.04",
+      "test": "dante",
+      "returncode": 0,
+      "seconds": 44,
+      "recaps": [
+        "degit-test-local-7439      : ok=19   changed=5    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0   ",
+        "degit-test-local-7439      : ok=19   changed=0    unreachable=0    failed=0    skipped=5    rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-22.04-dante.log"
+    },
+    {
+      "image": "rockylinux:9",
+      "test": "logging",
+      "returncode": 0,
+      "seconds": 96,
+      "recaps": [
+        "degit-test-local-939       : ok=170  changed=4    unreachable=0    failed=0    skipped=62   rescued=7    ignored=0   ",
+        "degit-test-local-939       : ok=170  changed=0    unreachable=0    failed=0    skipped=61   rescued=7    ignored=0   "
+      ],
+      "log": "rockylinux-9-logging.log"
+    },
+    {
+      "image": "rockylinux:9",
+      "test": "smoke",
+      "returncode": 0,
+      "seconds": 121,
+      "recaps": [
+        "degit-test-local-12206     : ok=149  changed=32   unreachable=0    failed=0    skipped=73   rescued=0    ignored=0   ",
+        "degit-test-local-12206     : ok=148  changed=0    unreachable=0    failed=0    skipped=70   rescued=0    ignored=0   "
+      ],
+      "log": "rockylinux-9-smoke.log"
+    },
+    {
+      "image": "rockylinux:9",
+      "test": "wpad",
+      "returncode": 0,
+      "seconds": 34,
+      "recaps": [
+        "degit-test-local-11678     : ok=22   changed=4    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0   ",
+        "degit-test-local-11678     : ok=21   changed=0    unreachable=0    failed=0    skipped=9    rescued=0    ignored=0   "
+      ],
+      "log": "rockylinux-9-wpad.log"
+    },
+    {
+      "image": "rockylinux:9",
+      "test": "kernel",
+      "returncode": 0,
+      "seconds": 27,
+      "recaps": [
+        "degit-test-local-1683      : ok=22   changed=2    unreachable=0    failed=0    skipped=5    rescued=1    ignored=0   ",
+        "degit-test-local-1683      : ok=22   changed=0    unreachable=0    failed=0    skipped=5    rescued=1    ignored=0   "
+      ],
+      "log": "rockylinux-9-kernel.log"
+    },
+    {
+      "image": "rockylinux:9",
+      "test": "dante",
+      "returncode": 0,
+      "seconds": 46,
+      "recaps": [
+        "degit-test-local-6830      : ok=26   changed=7    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0   ",
+        "degit-test-local-6830      : ok=26   changed=0    unreachable=0    failed=0    skipped=5    rescued=0    ignored=0   "
+      ],
+      "log": "rockylinux-9-dante.log"
+    },
+    {
+      "image": "ubuntu:26.04",
+      "test": "logging",
+      "returncode": 0,
+      "seconds": 130,
+      "recaps": [
+        "degit-test-local-7586      : ok=173  changed=4    unreachable=0    failed=0    skipped=59   rescued=7    ignored=0   ",
+        "degit-test-local-7586      : ok=173  changed=0    unreachable=0    failed=0    skipped=58   rescued=7    ignored=0   "
+      ],
+      "log": "ubuntu-26.04-logging.log"
+    },
+    {
+      "image": "ubuntu:26.04",
+      "test": "smoke",
+      "returncode": 0,
+      "seconds": 173,
+      "recaps": [
+        "degit-test-local-3231      : ok=162  changed=33   unreachable=0    failed=0    skipped=60   rescued=0    ignored=0   ",
+        "degit-test-local-3231      : ok=161  changed=0    unreachable=0    failed=0    skipped=57   rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-26.04-smoke.log"
+    },
+    {
+      "image": "ubuntu:26.04",
+      "test": "wpad",
+      "returncode": 0,
+      "seconds": 34,
+      "recaps": [
+        "degit-test-local-20304     : ok=22   changed=4    unreachable=0    failed=0    skipped=10   rescued=0    ignored=0   ",
+        "degit-test-local-20304     : ok=21   changed=0    unreachable=0    failed=0    skipped=9    rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-26.04-wpad.log"
+    },
+    {
+      "image": "ubuntu:26.04",
+      "test": "kernel",
+      "returncode": 0,
+      "seconds": 26,
+      "recaps": [
+        "degit-test-local-30757     : ok=22   changed=1    unreachable=0    failed=0    skipped=5    rescued=1    ignored=0   ",
+        "degit-test-local-30757     : ok=22   changed=0    unreachable=0    failed=0    skipped=5    rescued=1    ignored=0   "
+      ],
+      "log": "ubuntu-26.04-kernel.log"
+    },
+    {
+      "image": "ubuntu:26.04",
+      "test": "dante",
+      "returncode": 0,
+      "seconds": 38,
+      "recaps": [
+        "degit-test-local-22513     : ok=19   changed=5    unreachable=0    failed=0    skipped=6    rescued=0    ignored=0   ",
+        "degit-test-local-22513     : ok=19   changed=0    unreachable=0    failed=0    skipped=5    rescued=0    ignored=0   "
+      ],
+      "log": "ubuntu-26.04-dante.log"
+    }
+  ],
+  "virtual_machines": [
+    {
+      "platform": "debian-13",
+      "image": {
+        "platform": "debian-13",
+        "url": "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2",
+        "algorithm": "sha512",
+        "checksum": "3ace18e33bdd036edb49d1f79342bd01d2ab980e35194edb0b410435cd543538d286a0bd13bbb0835f7862306e3d385ce2f6a70d8ecf0bd961111166adbc1b8e",
+        "bytes": 341114880
+      },
+      "tests": [
+        {
+          "test": "apply",
+          "returncode": 0,
+          "recaps": [
+            [
+              "45",
+              "6",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "guards",
+          "returncode": 0,
+          "recaps": [
+            [
+              "60",
+              "4",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "unchanged",
+          "returncode": 0,
+          "recaps": [
+            [
+              "41",
+              "0",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        }
+      ],
+      "boot_seconds": 46,
+      "passed": true,
+      "seconds": 296
+    },
+    {
+      "platform": "ubuntu-22.04",
+      "image": {
+        "platform": "ubuntu-22.04",
+        "url": "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img",
+        "algorithm": "sha256",
+        "checksum": "2099e63da0b822ef8e05e3d596c1b402eaaae658fc08ab919cb8495bfcdc488b",
+        "bytes": 730529792
+      },
+      "tests": [
+        {
+          "test": "apply",
+          "returncode": 0,
+          "recaps": [
+            [
+              "47",
+              "5",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "guards",
+          "returncode": 0,
+          "recaps": [
+            [
+              "64",
+              "4",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "unchanged",
+          "returncode": 0,
+          "recaps": [
+            [
+              "43",
+              "0",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        }
+      ],
+      "boot_seconds": 62,
+      "passed": true,
+      "seconds": 461
+    },
+    {
+      "platform": "ubuntu-24.04",
+      "image": {
+        "platform": "ubuntu-24.04",
+        "url": "https://cloud-images.ubuntu.com/releases/24.04/release/ubuntu-24.04-server-cloudimg-amd64.img",
+        "algorithm": "sha256",
+        "checksum": "04e8f2461a16a44e78a370284471f29616cdd9baf1893df25807b71f985b6c94",
+        "bytes": 621284352
+      },
+      "tests": [
+        {
+          "test": "apply",
+          "returncode": 0,
+          "recaps": [
+            [
+              "47",
+              "5",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "guards",
+          "returncode": 0,
+          "recaps": [
+            [
+              "64",
+              "4",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "unchanged",
+          "returncode": 0,
+          "recaps": [
+            [
+              "43",
+              "0",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        }
+      ],
+      "boot_seconds": 80,
+      "passed": true,
+      "seconds": 439
+    },
+    {
+      "platform": "ubuntu-26.04",
+      "image": {
+        "platform": "ubuntu-26.04",
+        "url": "https://cloud-images.ubuntu.com/releases/26.04/release/ubuntu-26.04-server-cloudimg-amd64.img",
+        "algorithm": "sha256",
+        "checksum": "5645d0318ad21f643ebb1ac4567514620e9893380b07b0201fda163baa5b7eb5",
+        "bytes": 859090944
+      },
+      "tests": [
+        {
+          "test": "apply",
+          "returncode": 0,
+          "recaps": [
+            [
+              "47",
+              "5",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "guards",
+          "returncode": 0,
+          "recaps": [
+            [
+              "64",
+              "4",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "unchanged",
+          "returncode": 0,
+          "recaps": [
+            [
+              "43",
+              "0",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        }
+      ],
+      "boot_seconds": 79,
+      "passed": true,
+      "seconds": 389
+    },
+    {
+      "platform": "rockylinux-9",
+      "image": {
+        "platform": "rockylinux-9",
+        "url": "https://dl.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base.latest.x86_64.qcow2",
+        "algorithm": "sha256",
+        "checksum": "92c206cc6f790c61583247eefe87890f8828420662c17cacf247cec78ab4eec8",
+        "bytes": 645988352
+      },
+      "tests": [
+        {
+          "test": "apply",
+          "returncode": 0,
+          "recaps": [
+            [
+              "48",
+              "5",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "guards",
+          "returncode": 0,
+          "recaps": [
+            [
+              "62",
+              "4",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        },
+        {
+          "test": "unchanged",
+          "returncode": 0,
+          "recaps": [
+            [
+              "44",
+              "0",
+              "0",
+              "0"
+            ]
+          ],
+          "passed": true
+        }
+      ],
+      "boot_seconds": 55,
+      "passed": true,
+      "seconds": 297
+    }
+  ],
+  "limitations": [
+    "No genuine subscribed RHEL 9 VM was available. Rocky is not a RHEL acceptance test.",
+    "No forced logrotate rotation, vacuum, storage saturation or age-retention stress test.",
+    "No full guest reboot after role application; persistent writing and journal service restarts were exercised."
+  ],
+  "cleanup": {
+    "dedicated_vms_removed": true,
+    "temporary_credentials_removed": true,
+    "downloaded_guest_disks_removed": true,
+    "qemu_tooling_image_removed": true,
+    "temporary_remote_controller_removed": true
+  },
+  "raw_evidence_sha256": "132c77dab7096bf7a27a041f52517b324f65f0ef93beea66a9f231c25a1c0d94"
+}

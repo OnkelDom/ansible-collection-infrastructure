@@ -1,0 +1,24 @@
+---
+- name: Install journald platform packages
+  ansible.builtin.package:
+    name: '{{ logging_journald_packages if logging_journald_packages | length else logging_journald_platform_packages }}'
+    state: present
+  when: logging_journald_manage_package | bool
+  become: true
+- name: Ensure journald drop-in directory exists
+  ansible.builtin.file:
+    path: '{{ logging_journald_config_dir }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+- name: Write managed journald policy
+  ansible.builtin.template:
+    src: journald.conf.j2
+    dest: '{{ logging_journald_config_file }}'
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart managed journald
+  become: true

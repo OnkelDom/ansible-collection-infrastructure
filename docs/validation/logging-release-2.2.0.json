@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-03",
+  "version": "2.2.0",
+  "production_rollout": false,
+  "tested_artifact_sha256": "8c2f9dc7b9081c2b158b6f7b144f3b1223b806057a9c4cca85d17afb764ee3b2",
+  "release_artifact_sha256": "fd1339c2198abad6ffa04c6783e19d7624181edfb49cb6582a05a6434906f552",
+  "changed_archive_members": [
+    "MANIFEST.json"
+  ],
+  "role_payload_identical_to_tested_artifact": true,
+  "validation": "logging-20261103.json"
+}

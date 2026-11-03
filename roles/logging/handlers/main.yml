@@ -1,0 +1,6 @@
+---
+- name: Restart managed journald
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/restart_journald.yml'
+  when:
+  - logging_manage_journald | bool
+  - logging_journald_manage_service | bool

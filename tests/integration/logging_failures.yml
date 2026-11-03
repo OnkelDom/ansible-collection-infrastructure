@@ -1,0 +1,21 @@
+---
+- name: Exercise logging migration and staged validation on disposable guests
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    logging_journald_manage_service: false
+  pre_tasks:
+  - name: Require explicit disposable fixture permission
+    ansible.builtin.assert:
+      that:
+      - logging_disposable_test | default(false) | bool
+      fail_msg: Use disposable guests only with logging_disposable_test=true.
+  tasks:
+  - name: Establish valid logging baseline
+    ansible.builtin.include_role:
+      name: degitag.infrastructure.logging
+    vars:
+      logging_manage_logrotate_global: true
+  - name: Verify guarded negative cases
+    ansible.builtin.include_tasks: '{{ playbook_dir }}/../../roles/logging/tests/failure_cases.yml'
