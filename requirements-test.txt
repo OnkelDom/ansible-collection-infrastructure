@@ -1,5 +1,5 @@
 ansible-core>=2.20,<2.22
-ansible-lint>=26.10,<27
+ansible-lint>=26.11.0,<27
 pytest>=9,<10
 PyYAML>=6.0.3,<7
 ruamel.yaml>=0.19,<0.20
